@@ -1,2 +1,2 @@
-lightweight_web
+lightweight_node
 ===============
