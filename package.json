@@ -8,5 +8,6 @@
     , "express-resource": "1.0.0"
     , "mongodb": "1.2.8"
     , "db-oracle": "0.2.3"
+    , "node-dev": "latest"
   }
 }
