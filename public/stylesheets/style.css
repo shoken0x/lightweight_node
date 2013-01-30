@@ -1,17 +1,6 @@
-/*
-body {
-  padding: 0px 50px;
-}
-
-*/
 body {
   margin: 0;
-  padding: 0px 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
-
-a {
-  color: #00B7FF;
+  padding: 0;
 }
 
 h1, h2, h3, h4, h5, h6, p, ul, ol, li, dl, dt, dd {
@@ -40,12 +29,11 @@ body ul li {
     margin: 5px;
     text-align: left;
     float: left;
-    display: none;
     overflow: hidden;
 }
 /* =======================================
-    ClearFixElements
-======================================= */
+ * ClearFixElements
+ * ======================================= */
 body ul:after {
     content: ".";
     height: 0;
@@ -58,4 +46,3 @@ body ul {
     display: inline-block;
     overflow: hidden;
 }
-

@@ -1,8 +1,15 @@
 <html>
 <head>
   <title>物件情報サンプル</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <script src="/javascripts/jquery.min.js"></script>
 </head>
+
 <body>
+<header>
+  <h1>Lightweight Node Apps</h1>
+</header>
+
 <p>
   <%=doc['bukken_id']%> <br />
   <%=doc['name']%> <br />
@@ -17,5 +24,27 @@
   <img src="<%=doc['image4']%>?<%=doc['bukken_id']%>" /> <br />
   <img src="<%=doc['image5']%>?<%=doc['bukken_id']%>" /> <br />
   <img src="<%=doc['image6']%>?<%=doc['bukken_id']%>" /> <br />
+<ul>
+  <div id="recommend"></div>
+</ul>
+
+  <script type="text/javascript">
+  <!--
+  (function(){
+    $.ajax({
+      url: '/mongo/api?user_id=1&api_id=1',
+      dataType: 'json',
+      success : function(data) {
+        for (var i=0; i < data.length; i++){
+          $('#recommend').append('<li>'+ data[i].name +'</li>');
+        }
+      },
+      error : function(){
+        alert('error');
+      }
+    });
+  })();
+  // -->
+  </script>
 </body>
 </html>
