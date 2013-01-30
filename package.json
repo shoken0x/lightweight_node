@@ -9,5 +9,6 @@
     , "mongodb": "1.2.8"
     , "db-oracle": "0.2.3"
     , "node-dev": "latest"
+    , "async": "0.1.22"
   }
 }
