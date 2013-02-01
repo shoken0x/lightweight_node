@@ -1,8 +1,10 @@
 var express = require('express')
   , routes = require('./routes');
+var async = require('async');
 
 var mongo_server = 'mongo-server'
 var oracle_server = 'oracle-server'
+
 
 var app = express();
 
@@ -19,6 +21,31 @@ app.get('/', function(req, res){
   res.render('index', { title: 'Express' })
 });
 
+
+app.get('/async', function(req, res){
+  async.waterfall(
+    [
+      /* first */
+      function first(callback) {
+        console.log('first function');
+        var str = '1st';
+        callback(null, str);
+      },
+      /* second */
+      function second(str, callback) {
+        console.log('second function');
+        str = str + '2nd';
+        callback(null, str);
+      },
+      /* last */
+      function last(str) {
+        console.log('last function');
+        console.log('str : ' +  str);
+      }
+    ]
+  );
+  res.send("async");
+});
 
 app.get('/mongo/bukken', function(req, res){
   var mongo = require('mongodb'),
