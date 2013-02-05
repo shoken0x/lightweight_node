@@ -32,11 +32,11 @@
   <!--
   (function(){
     $.ajax({
-      url: '/mongo/api?user_id=1&api_id=1',
+      url: '/mongo/api?user_id=<%=user_id%>&api_id=1',
       dataType: 'json',
       success : function(data) {
         for (var i=0; i < data.length; i++){
-          $('#recommend').append('<li>'+ data[i].name +'</li>');
+          $('#recommend').append('<li>レコメンド物件 '+ data[i].name +'<img src="' + data[i].image1 + '?<%=doc["bukken_id"]%>"></li>');
         }
       },
       error : function(){
