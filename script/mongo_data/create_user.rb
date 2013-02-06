@@ -1,13 +1,16 @@
+# -*- encoding: utf-8 -*-
+
 require 'mongo'
 include Mongo
 
+DATA_NUM = 3000000 
+COLL_NAME = 'user'
+
 @client = MongoClient.new('localhost', 27017)
 @db     = @client['lw']
-@coll   = @db['user']
+@coll   = @db[COLL_NAME]
 
-DATA_NUM =3000000 
-
-puts 'create user...'
+puts "create #{COLL_NAME}..."
 
 def rand_str(digits)
   charset = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
