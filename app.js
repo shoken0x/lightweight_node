@@ -1,3 +1,17 @@
+var cluster = require('cluster')
+var numCPUs = require('os').cpus().length;
+
+if (cluster.isMaster) {
+    // マスタ
+    for (var i = 0; i < numCPUs; i++) {
+        cluster.fork(); // ワーカを起動
+    }
+
+    cluster.on('death', function(worker) {
+        console.log('worker ' + worker.pid + ' died');
+    });
+} else {
+
 var express = require('express')
   , routes = require('./routes');
 var async = require('async');
@@ -43,7 +57,9 @@ app.get('/mongo/bukken', function(req, res){
         }  
         res.render('bukken', { user_id:   user_id,
                                bukken_id: bukken_id,
-                               doc: doc })
+                               doc: doc, 
+                               worker_id: cluster.worker.id
+                  });
         db.close();
       });
     });
@@ -259,3 +275,4 @@ function sortObj(obj, isKey, isNumber, isDesc){
 }
 
 app.listen(8080);
+}
