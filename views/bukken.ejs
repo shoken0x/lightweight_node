@@ -36,7 +36,7 @@
       dataType: 'json',
       success : function(data) {
         for (var i=0; i < data.length; i++){
-          $('#recommend').append('<li>レコメンド物件 '+ data[i].name +'<img src="' + data[i].image1 + '?<%=doc["bukken_id"]%>"></li>');
+          $('#recommend').append('<li>レコメンド物件 bukken_id = '+ data[i].bukken_id +' : '+data[i].name +'<img src="' + data[i].image1 + '?<%=doc["bukken_id"]%>"></li>');
         }
       },
       error : function(){
