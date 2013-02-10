@@ -19,7 +19,7 @@ end
 
 DATA_NUM.times do |i|
   ah_id = i+1
-  user_id = rand(1..5000)
+  user_id = rand(1..3000000)
   bukken_id = rand(1..50000)
   created_at = rand_time("2003-01-01","2013-01-01").strftime("%Y-%m-%d %H:%M:%S")
   count = rand(1..10)

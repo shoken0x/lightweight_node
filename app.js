@@ -1,16 +1,16 @@
-var cluster = require('cluster')
-var numCPUs = require('os').cpus().length;
-
-if (cluster.isMaster) {
-    // マスタ
-    for (var i = 0; i < numCPUs; i++) {
-        cluster.fork(); // ワーカを起動
-    }
-
-    cluster.on('death', function(worker) {
-        console.log('worker ' + worker.pid + ' died');
-    });
-} else {
+//var cluster = require('cluster')
+//var numCPUs = require('os').cpus().length;
+//
+//if (cluster.isMaster) {
+//    // マスタ
+//    for (var i = 0; i < numCPUs; i++) {
+//        cluster.fork(); // ワーカを起動
+//    }
+//
+//    cluster.on('death', function(worker) {
+//        console.log('worker ' + worker.pid + ' died');
+//    });
+//} else {
 
 var express = require('express')
   , routes = require('./routes');
@@ -51,20 +51,48 @@ app.get('/mongo/bukken', function(req, res){
   db.open(function(err, db) {
     db.collection('bukken', function(err, collection) {
       collection.findOne(q, function(err, doc) {
-        //debug
-        for (var key in q) {
-          console.log('q = '+ key + ':'+q[key]);
-        }  
-        res.render('bukken', { user_id:   user_id,
-                               bukken_id: bukken_id,
-                               doc: doc, 
-                               worker_id: cluster.worker.id
+        res.render('bukken', { user_id: user_id
+                               ,bukken_id: bukken_id
+                               ,doc: doc 
+                               ,database: 'mongo'
+                               ,worker_id: "worker_id"
+                               //,worker_id: cluster.worker.id
                   });
         db.close();
       });
     });
   });
 });
+
+app.get('/oracle/bukken', function(req, res){
+  var oracle = require('db-oracle');
+  var user_id   = req.param('user_id');
+  var bukken_id = req.param('bukken_id');
+
+  new oracle.Database({
+      hostname: oracle_server,
+      user: 'test',
+      password: 'test',
+      database: 'XE'
+  }).connect(function(error) {
+      if (error) {
+          return console.log("CONNECTION ERROR: " + error);
+      }
+      this.query().select('*').from('bukken').where('"bukken_id"=' + bukken_id).execute(function(error, doc) {
+          if (error) {
+              return console.log('ERROR: ' + error);
+          }
+          res.render('bukken', { user_id: user_id
+                                 ,bukken_id: bukken_id
+                                 ,doc: doc[0] 
+                                 ,database: 'oracle'
+                                 ,worker_id: "worker_id"
+                                 //,worker_id: cluster.worker.id
+                    });
+      });
+  });
+});
+
 
 app.get('/mongo/api', function(req, res){
   var mongo = require('mongodb'),
@@ -83,7 +111,6 @@ app.get('/mongo/api', function(req, res){
                      function(err, results) {
                        if (err) { throw err; }
                        res.send(results);
-                       console.log("res.send");
                        db.close();
                    });
   });
@@ -104,15 +131,12 @@ function getActionHistory(callback){
 /* 行動履歴から物件情報リストを作成する */
 function getBukkenIds(docs, callback){
   var bukken_ids = new Array();
-  
-  db.collection('keyword', function(err, collection) {
-    docs.each( function(err, doc){
-      if (doc == null ) {
-        callback(null, bukken_ids); 
-      }else{
-        bukken_ids.push({'bukken_id' : doc.bukken_id});
-      }
-    });
+  docs.each( function(err, doc){
+    if (doc == null ) {
+      callback(null, bukken_ids); 
+    }else{
+      bukken_ids.push({'bukken_id' : doc.bukken_id});
+    }
   });
 }
 
@@ -173,28 +197,148 @@ function calcBukken(keyword_list, callback){
 
 /* 物件上位2件をjsonとして返す */
 function getBukkenJson (bukkenhash, callback) {
-  /* 物件が2以下だった場合はnullを返す */
-  if (bukkenhash.length < 2) {
-    callback(null, null);
-  } else {
+  bukkenhash = sortObj(bukkenhash, false, true, true);
+  var bukken_ids = new Array();
+  var count = 0;
+  for (var bukken_id in bukkenhash) {
+    count++;
+    if (count > 2){break;}
+    bukken_ids.push({'bukken_id':parseInt(bukken_id)});
+  }
+  /* 物件が2以下だった場合は空のハッシュを返す */
+  if (count < 2 ) {callback(null,{});}
 
-    bukkenhash = sortObj(bukkenhash, false, true, true);
-    var bukken_ids = new Array();
-    var count = 0;
-    for (var bukken_id in bukkenhash) {
-      count++;
-      if (count > 2){break;}
-      bukken_ids.push({'bukken_id':parseInt(bukken_id)});
-    }
-
-    db.collection('bukken', function(err, collection) {
-      //collection.find({'$or' : bukken_ids}).toArray(function(err, bukkens) {
-      collection.find({'$or' : bukken_ids}).toArray(function(err, bukkens) {
-        callback(null, bukkens);
-      }); 
+  db.collection('bukken', function(err, collection) {
+    collection.find({'$or' : bukken_ids}).toArray(function(err, bukkens) {
+      callback(null, bukkens);
     }); 
+  }); 
+}
+
+
+app.get('/oracle/api', function(req, res){
+  var oracle = require('db-oracle');
+  user_id   = req.param('user_id');
+  api_id = req.param('api_id');
+
+  oradb = new oracle.Database({
+                 hostname: oracle_server,
+                 user: 'test',
+                 password: 'test',
+                 database: 'XE'
+               });
+  user_id = req.param('user_id');
+  api_id  = req.param('api_id');
+  json = "";
+  // レコメンド物件取得処理 
+  async.waterfall( [getActionHistoryOra, getBukkenIdsOra, calcKeywordOra, getKeyBestTenOra, calcBukkenOra, getBukkenJsonOra],
+                   function(err, results) {
+                     if (err) { throw err; }
+                     res.send(results);
+  });
+});
+
+/* レコメンド取得処理 */
+/* 行動履歴取得 */
+function getActionHistoryOra(callback){
+  oradb.connect(function(error) {
+    if (error) {
+        return console.log("CONNECTION ERROR: " + error);
+    }
+    this.query().select('*').from('actionhistory').where('"user_id"=' + user_id).execute(function(error, docs) {
+      callback(null, docs);
+    });
+  });
+}
+
+/* 行動履歴から物件情報リストを作成する */
+function getBukkenIdsOra(docs, callback) {
+  var bukken_ids = new Array();
+  for ( var i=0; i < docs.length; i++) {
+    bukken_ids.push(docs[i].bukken_id);
+    if ( i == (docs.length - 1) ) {callback(null, bukken_ids);}
   }
 }
+
+/* 物件情報リストから物件に含まれるキーワードごとの合計を計算 */
+function calcKeywordOra(bukken_ids, callback) {
+  var keyhash = {};
+  oradb.connect(function(error) {
+    if (error) {
+        return console.log("CONNECTION ERROR: " + error);
+    }
+    this.query().select('"keyword"').from('keyword').where('"bukken_id" in (' + bukken_ids.join(',') +')').execute(function(error, keys) {
+      if ( typeof keys === "undefined" || keys.length == 0 ) {callback(null, keyhash);}
+      for ( var i=0; i < keys.length; i++) {
+        if ( typeof keyhash[keys[i].keyword] === "undefined" ) {
+          keyhash[keys[i].keyword] = 1;
+        } else {
+          keyhash[keys[i].keyword] = keyhash[keys[i].keyword] + 1;
+        }
+        if ( i == (keys.length - 1) ) {callback(null, keyhash);}
+      }
+    });
+  });
+}
+
+/* キーワード上位10件を配列化 */
+function getKeyBestTenOra(keyhash, callback) {
+  var keyword_list = new Array();
+
+  keyhash = sortObj(keyhash, false, true, true);
+  var count = 0;
+  for (var key in keyhash) {
+    count++;
+    if (count > 10){break;}
+    keyword_list.push("'" + key + "'");
+  }
+  callback(null, keyword_list);
+}
+
+/* キーワードを含む物件のIDを取得 */
+function calcBukkenOra(keyword_list, callback){
+  var bukkenhash = {};
+  oradb.connect(function(error) {
+    if (error) {
+        return console.log("CONNECTION ERROR: " + error);
+    }
+    this.query().select('"bukken_id"').from('keyword').where('"keyword" in (' + keyword_list.join(',') +')').execute(function(error, keys) {
+      if ( typeof keys === "undefined" || keys.length == 0 ) {callback(null, bukkenhash);}
+      for ( var i=0; i < keys.length; i++) {
+        if ( typeof bukkenhash[keys[i].bukken_id] === "undefined" ) {
+          bukkenhash[keys[i].bukken_id] = 1;
+        } else {
+          bukkenhash[keys[i].bukken_id] = bukkenhash[keys[i].bukken_id] + 1;
+        }
+        if ( i == (keys.length - 1) ) {callback(null, bukkenhash);}
+      }
+    });
+  });
+}
+
+/* 物件上位2件をjsonとして返す */
+function getBukkenJsonOra (bukkenhash, callback) {
+  bukkenhash = sortObj(bukkenhash, false, true, true);
+  var bukken_ids = new Array();
+  var count = 0;
+  for (var bukken_id in bukkenhash) {
+    count++;
+    if (count > 2){break;}
+    bukken_ids.push(parseInt(bukken_id));
+  }
+  /* 物件が2以下だった場合は空のハッシュを返す */
+  if (count < 2 ) {callback(null,{});}
+
+  oradb.connect(function(error) {
+    if (error) {
+        return console.log("CONNECTION ERROR: " + error);
+    }
+    this.query().select('*').from('bukken').where('"bukken_id" in (' + bukken_ids.join(',') +')').execute(function(error, bukkens) {
+      callback(null, bukkens);
+    });
+  });
+}
+
 
 
 
@@ -233,7 +377,7 @@ app.get('/oracle', function(req, res){
           return console.log("CONNECTION ERROR: " + error);
       }
   
-      this.query().select('*').from('EMP').execute(function(error, rows) {
+      this.query().select('*').from('"emp"').execute(function(error, rows) {
           if (error) {
               return console.log('ERROR: ' + error);
           }
@@ -274,5 +418,5 @@ function sortObj(obj, isKey, isNumber, isDesc){
   }
 }
 
-app.listen(8080);
-}
+app.listen(80);
+//}

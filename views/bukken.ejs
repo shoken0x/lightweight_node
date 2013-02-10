@@ -33,7 +33,7 @@
   <!--
   (function(){
     $.ajax({
-      url: '/mongo/api?user_id=<%=user_id%>&api_id=1',
+      url: '/<%=database%>/api?user_id=<%=user_id%>&api_id=1',
       dataType: 'json',
       success : function(data) {
         for (var i=0; i < data.length; i++){
