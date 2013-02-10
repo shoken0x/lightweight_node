@@ -1,16 +1,16 @@
-//var cluster = require('cluster')
-//var numCPUs = require('os').cpus().length;
-//
-//if (cluster.isMaster) {
-//    // マスタ
-//    for (var i = 0; i < numCPUs; i++) {
-//        cluster.fork(); // ワーカを起動
-//    }
-//
-//    cluster.on('death', function(worker) {
-//        console.log('worker ' + worker.pid + ' died');
-//    });
-//} else {
+var cluster = require('cluster')
+var numCPUs = require('os').cpus().length;
+
+if (cluster.isMaster) {
+    // マスタ
+    for (var i = 0; i < numCPUs; i++) {
+        cluster.fork(); // ワーカを起動
+    }
+
+    cluster.on('death', function(worker) {
+        console.log('worker ' + worker.pid + ' died');
+    });
+} else {
 
 var express = require('express')
   , routes = require('./routes');
@@ -55,8 +55,7 @@ app.get('/mongo/bukken', function(req, res){
                                ,bukken_id: bukken_id
                                ,doc: doc 
                                ,database: 'mongo'
-                               ,worker_id: "worker_id"
-                               //,worker_id: cluster.worker.id
+                               ,worker_id: cluster.worker.id
                   });
         db.close();
       });
@@ -86,8 +85,7 @@ app.get('/oracle/bukken', function(req, res){
                                  ,bukken_id: bukken_id
                                  ,doc: doc[0] 
                                  ,database: 'oracle'
-                                 ,worker_id: "worker_id"
-                                 //,worker_id: cluster.worker.id
+                                 ,worker_id: cluster.worker.id
                     });
       });
   });
@@ -418,5 +416,5 @@ function sortObj(obj, isKey, isNumber, isDesc){
   }
 }
 
-app.listen(80);
-//}
+app.listen(8080);
+}
