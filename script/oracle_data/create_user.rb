@@ -28,12 +28,12 @@ DATA_NUM.times do |i|
   last_name = rand_str(8)
   email = rand_str(10) + '@example.com'
   profile = rand_str(150)
-  @conn.exec("insert into #{TABLE} values(#{user_id}, '#{first_name}', '#{last_name}', '#{email}', '#{profile}')")
+  @conn.exec("insert into \"#{TABLE}\" values(#{user_id}, '#{first_name}', '#{last_name}', '#{email}', '#{profile}')")
 end
 
 @conn.commit
 
-@conn.exec("select count(*) from #{TABLE}") do |r|
+@conn.exec("select count(*) from \"#{TABLE}\"") do |r|
   puts r[0].to_i
 end
 

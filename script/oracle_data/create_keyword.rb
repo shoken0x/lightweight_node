@@ -18,12 +18,12 @@ DATA_NUM.times do |i|
   keyword_id = i+1
   bukken_id = rand(1..50000)
   keyword = rand_str(5)
-  @conn.exec("insert into #{TABLE} values( #{keyword_id}, #{bukken_id}, '#{keyword}')") 
+  @conn.exec("insert into \"#{TABLE}\" values( #{keyword_id}, #{bukken_id}, '#{keyword}')") 
 end
 
 @conn.commit
 
-@conn.exec("select count(*) from #{TABLE}") do |r|
+@conn.exec("select count(*) from \"#{TABLE}\"") do |r|
   puts r[0].to_i
 end
 

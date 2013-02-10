@@ -23,12 +23,12 @@ DATA_NUM.times do |i|
   bukken_id = rand(1..50000)
   created_at = rand_time("2003-01-01","2013-01-01").strftime("%Y-%m-%d %H:%M:%S")
   count = rand(1..10)
-  @conn.exec("insert into #{TABLE} values( #{ah_id}, #{user_id}, #{bukken_id}, to_date('#{created_at}','yyyy-mm-dd hh24:mi:ss'), #{count})") 
+  @conn.exec("insert into \"#{TABLE}\" values( #{ah_id}, #{user_id}, #{bukken_id}, to_date('#{created_at}','yyyy-mm-dd hh24:mi:ss'), #{count})") 
 end
 
 @conn.commit
 
-@conn.exec("select count(*) from #{TABLE}") do |r|
+@conn.exec("select count(*) from \"#{TABLE}\"") do |r|
   puts r[0].to_i
 end
 

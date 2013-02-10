@@ -35,12 +35,12 @@ DATA_NUM.times do |i|
   image4 = '/images/b/foot_1.jpeg'
   image5 = '/images/b/foot_2.jpeg'
   image6 = '/images/b/foot_3.jpeg'
-  @conn.exec("insert into #{TABLE} values( #{bukken_id}, '#{name}', '#{category}', #{area_id}, '#{eki_info}', '#{description}', #{kakaku}, '#{kakaku_disp}', '#{tochimenseki}', '#{image1}', '#{image2}', '#{image3}', '#{image4}', '#{image5}', '#{image6}')")
+  @conn.exec("insert into \"#{TABLE}\" values( #{bukken_id}, '#{name}', '#{category}', #{area_id}, '#{eki_info}', '#{description}', #{kakaku}, '#{kakaku_disp}', '#{tochimenseki}', '#{image1}', '#{image2}', '#{image3}', '#{image4}', '#{image5}', '#{image6}')")
 end
 
 @conn.commit
 
-@conn.exec("select count(*) from #{TABLE}") do |r|
+@conn.exec("select count(*) from \"#{TABLE}\"") do |r|
   puts r[0].to_i
 end
 
