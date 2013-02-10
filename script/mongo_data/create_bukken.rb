@@ -3,7 +3,8 @@
 require 'mongo'
 include Mongo
 
-DATA_NUM = 50000
+
+DATA_NUM = 50000   #50,000
 COLL_NAME = 'bukken'
 
 @client = MongoClient.new('localhost', 27017)

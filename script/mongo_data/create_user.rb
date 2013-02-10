@@ -1,10 +1,13 @@
 # -*- encoding: utf-8 -*-
+# 
+# 今回の検証では使用しない
+#
 
 require 'mongo'
 include Mongo
 
-DATA_NUM = 3000000 
-COLL_NAME = 'user'
+DATA_NUM = 30
+COLL_NAME = 'user_'
 
 @client = MongoClient.new('localhost', 27017)
 @db     = @client['lw']
