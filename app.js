@@ -354,16 +354,16 @@ app.get('/mongo', function(req, res){
     if (err) {
         return console.log("ERROR: " + err);
     }
-    console.log("DB name: " + db.databaseName);
+    //console.log("DB name: " + db.databaseName);
     db.collection('users', function(err, collection) {
       if (err) {
           return console.log("ERROR: " + err);
       }
-      console.log("Collection name: " + collection.collectionName);
+      //console.log("Collection name: " + collection.collectionName);
       collection.find().toArray(function(err, doc) {
-        console.log(doc);
-        res.send(doc);
+        //console.log(doc);
         db.close();
+        res.send(doc);
       });
     });
   });
