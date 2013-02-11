@@ -351,8 +351,14 @@ app.get('/mongo', function(req, res){
   var db = new Db('test', server, {safe:true});
   
   db.open(function(err, db) {
+    if (err) {
+        return console.log("ERROR: " + err);
+    }
     console.log("DB name: " + db.databaseName);
     db.collection('users', function(err, collection) {
+      if (err) {
+          return console.log("ERROR: " + err);
+      }
       console.log("Collection name: " + collection.collectionName);
       collection.find().toArray(function(err, doc) {
         console.log(doc);
