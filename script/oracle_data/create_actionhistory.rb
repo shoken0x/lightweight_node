@@ -24,6 +24,10 @@ DATA_NUM.times do |i|
   created_at = rand_time("2003-01-01","2013-01-01").strftime("%Y-%m-%d %H:%M:%S")
   count = rand(1..10)
   @conn.exec("insert into \"#{TABLE}\" values( #{ah_id}, #{user_id}, #{bukken_id}, to_date('#{created_at}','yyyy-mm-dd hh24:mi:ss'), #{count})") 
+  
+  if i%1000 == 0
+    puts i
+  end
 end
 
 @conn.commit

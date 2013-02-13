@@ -36,6 +36,10 @@ DATA_NUM.times do |i|
   image5 = '/images/b/foot_2.jpeg'
   image6 = '/images/b/foot_3.jpeg'
   @conn.exec("insert into \"#{TABLE}\" values( #{bukken_id}, '#{name}', '#{category}', #{area_id}, '#{eki_info}', '#{description}', #{kakaku}, '#{kakaku_disp}', '#{tochimenseki}', '#{image1}', '#{image2}', '#{image3}', '#{image4}', '#{image5}', '#{image6}')")
+
+  if i%1000 == 0
+    puts i
+  end
 end
 
 @conn.commit
