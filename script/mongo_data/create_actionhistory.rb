@@ -27,7 +27,7 @@ DATA_NUM.times do |i|
                 'created_at' => rand_time("2003-01-01","2013-01-01"),
                 'count' => rand(1..10)
               })
-  if i%100 == 0
+  if i%1000 == 0
     puts i
   end
 end

@@ -41,7 +41,7 @@ DATA_NUM.times do |i|
                 'image5' => '/images/b/foot_2.jpeg',
                 'image6' => '/images/b/foot_3.jpeg'
               })
-  if i%100 == 0
+  if i%1000 == 0
     puts i
   end
 end

@@ -22,7 +22,7 @@ DATA_NUM.times do |i|
                 'bukken_id' => rand(1..50000),
                 'keyword' => rand_str(5)
               })
-  if i%100 == 0
+  if i%1000 == 0
     puts i
   end
 end
