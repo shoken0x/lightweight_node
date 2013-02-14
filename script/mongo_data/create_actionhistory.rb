@@ -4,7 +4,7 @@ require 'mongo'
 require 'time'
 include Mongo
 
-DATA_NUM = 36000000  #36,000,000
+DATA_NUM = 36000000 #3,600,000
 COLL_NAME = 'actionhistory'
 
 @client = MongoClient.new('localhost', 27017)
@@ -22,7 +22,7 @@ end
 
 DATA_NUM.times do |i|
   @coll.insert({'ah_id' => i+1,
-                'user_id' => rand(1..3000000),
+                'user_id' => rand(1..300000),
                 'bukken_id' => rand(1..50000), 
                 'created_at' => rand_time("2003-01-01","2013-01-01"),
                 'count' => rand(1..10)
