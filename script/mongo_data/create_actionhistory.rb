@@ -4,7 +4,7 @@ require 'mongo'
 require 'time'
 include Mongo
 
-DATA_NUM = 36000000 #3,600,000
+DATA_NUM = 3600000 #3,600,000
 COLL_NAME = 'actionhistory'
 
 @client = MongoClient.new('localhost', 27017)
