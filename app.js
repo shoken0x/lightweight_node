@@ -484,4 +484,9 @@ function sortObj(obj, isKey, isNumber, isDesc){
 }
 
 app.listen(8080);
+
+process.on('uncaughtException', function (err) {
+    console.log('uncaughtException => ' + err);
+});
+
 }
