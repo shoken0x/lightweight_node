@@ -81,7 +81,7 @@ app.get('/oracle/bukken', function(req, res){
       hostname: oracle_server,
       user: 'test',
       password: 'test',
-      database: 'XE'
+      database: 'XE.oracle-server'
   }).connect(function(err) {
       if (err) {
         return console.log(new Date + " ORACLE CONNECTION ERROR: " + err);
@@ -267,7 +267,7 @@ app.get('/oracle/api', function(req, res){
                  hostname: oracle_server,
                  user: 'test',
                  password: 'test',
-                 database: 'XE'
+                 database: 'XE.oracle-server'
                });
   user_id = req.param('user_id');
   api_id  = req.param('api_id');
