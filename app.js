@@ -46,7 +46,6 @@ app.get('/mongo/bukken', function(req, res){
   var serverOptions = {
     auto_reconnect: true
     ,poolSize: 4 
-    //,'poolSize': 200 
   };
 
   var q = {};
@@ -134,11 +133,15 @@ app.get('/oracle/bukken', function(req, res){
 
 
 app.get('/mongo/api', function(req, res){
-  var mongo = require('mongodb'),
-    Server = mongo.Server,
-    Db = mongo.Db;
+  var mongo = require('mongodb');
+  var Server = mongo.Server;
+  var Db = mongo.Db;
+  var serverOptions = {
+    auto_reconnect: true
+    ,poolSize: 4 
+  };
   
-  var server = new Server(mongo_server, 27017, {});
+  var server = new Server(mongo_server, 27017, serverOptions);
   db = new Db('lw', server, {safe:true});
   user_id = req.param('user_id');
   api_id  = req.param('api_id');
