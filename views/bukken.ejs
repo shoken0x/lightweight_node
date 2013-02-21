@@ -12,7 +12,9 @@
 
 <p>
   worker_id : <%=worker_id%> <br />
+  <% if ((doc !== null) && doc.hasOwnProperty('bukken_id')) { %>
   bukken_id : <%=doc['bukken_id']%> <br />
+  <% } %>
   <%=doc['name']%> <br />
   <%=doc['category']%> <br />
   <%=doc['eki_info']%> <br />

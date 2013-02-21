@@ -36,40 +36,72 @@ app.get('/', function(req, res){
 });
 
 app.get('/mongo/bukken', function(req, res){
-  var mongo = require('mongodb'),
-    Server = mongo.Server,
-    Db = mongo.Db;
-
-  var server = new Server(mongo_server, 27017, {});
-  var db = new Db('lw', server, {safe:true});
+  var mongo = require('mongodb');
+  var Server = mongo.Server;
+  var Db = mongo.Db;
+  //var server = new Server(mongo_server, 27017, {auto_reconnect: false});
+  //var db = new Db('lw', server, {safe:true});
   var user_id   = req.param('user_id');
   var bukken_id = req.param('bukken_id');
+  var serverOptions = {
+    auto_reconnect: true
+    ,poolSize: 4 
+    //,'poolSize': 200 
+  };
 
   var q = {};
   q['bukken_id'] = parseInt(bukken_id);
 
-  db.open(function(err, db) {
-    if (err) {
-      return console.log(new Date + " MONGO DB OPEN ERROR: " + err);
-    }
-    db.collection('bukken', function(err, collection) {
+  var client = new Db('lw', new Server(mongo_server, 27017, serverOptions), {safe:false}),
+    f = function (err, collection) {
       if (err) {
-        return console.log(new Date + " MONGO COLLECTION ERROR: " + err);
+        return console.log(new Date + " MONGO DB collection ERROR: " + err);
       }
+      
       collection.findOne(q, function(err, doc) {
         if (err) {
-          return console.log(new Date + " MONGO FIND ERROR: " + err + " query = " + q);
+          return console.log(new Date + " MONGO DB find ERROR: " + err);
         }
-        db.close();
+        client.close();
         res.render('bukken', { user_id: user_id
                                ,bukken_id: bukken_id
-                               ,doc: doc 
+                               ,doc: doc
                                ,database: 'mongo'
                                ,worker_id: cluster.worker.id
                   });
       });
-    });
+    };
+
+  client.open(function(err, p_client) {
+    if (err) {
+      return console.log(new Date + " MONGO DB open ERROR: " + err);
+    }
+    client.collection('bukken', f);
   });
+
+
+  //db.open(function(err, db) {
+  //  if (err) {
+//      return console.log(new Date + " MONGO DB OPEN ERROR: " + err);
+//    }
+//    db.collection('bukken', function(err, collection) {
+//      if (err) {
+//        return console.log(new Date + " MONGO COLLECTION ERROR: " + err);
+//      }
+//      collection.findOne(q, function(err, doc) {
+//        if (err) {
+//          return console.log(new Date + " MONGO FIND ERROR: " + err + " query = " + q);
+//        }
+//        db.close();
+//        res.render('bukken', { user_id: user_id
+//                               ,bukken_id: bukken_id
+//                               ,doc: doc 
+//                               ,database: 'mongo'
+//                               ,worker_id: cluster.worker.id
+//                  });
+//      });
+//    });
+//  });
 });
 
 app.get('/oracle/bukken', function(req, res){
