@@ -45,7 +45,7 @@ app.get('/mongo/bukken', function(req, res){
   var bukken_id = req.param('bukken_id');
   var serverOptions = {
     auto_reconnect: true
-    ,poolSize: 4 
+    ,poolSize: 1 
   };
 
   var q = {};
@@ -133,12 +133,85 @@ app.get('/oracle/bukken', function(req, res){
 
 
 app.get('/mongo/api', function(req, res){
+  async.waterfall( [a,b,c,closeClient],
+                 function(err, results) {
+                   if (err) { console.log(new Date + "ERROR: " + err); }
+                   res.send("results");
+  });
+
+
+function a(callback){
   var mongo = require('mongodb');
   var Server = mongo.Server;
   var Db = mongo.Db;
   var serverOptions = {
     auto_reconnect: true
-    ,poolSize: 4 
+    ,poolSize: 1 
+    ,socketOptions:{timeout : 0, keepAlive : 1}
+  };
+  var client = new Db('lw', new Server(mongo_server, 27017, serverOptions), {safe:false});
+
+  callback(null, client);
+}
+
+function b(client, callback){
+  var bukken_id = 0;
+  client.open(function(err, p_client) {
+    if (err) { return console.log(new Date + " MONGO DB open ERROR: " + err); }
+    client.collection('actionhistory', function(err, collection){
+      collection.find({'user_id':parseInt(req.param('user_id'))}).sort({'created_at':-1}).limit(10).toArray( function(err, array){
+        //たぶんnodeでsortしたほうが早い
+        console.log(array[0].bukken_id);
+        bukken_id = array[0].bukken_id;
+
+        callback(null, client, bukken_id);
+      });
+    });
+  });
+}
+
+function c(client, bukken_id, callback){
+  var keyword = "";
+  client.collection('keyword', function(err, collection){
+    collection.find({'bukken_id':bukken_id}).limit(10).toArray( function(err, array){
+      console.log(array[0].keyword);
+      keyword = array[0].keyword;
+
+      callback(null, client, keyword);
+    });
+  });
+}
+
+function d(client, keyword, callback){
+  var rec_bukken_id = "";
+  client.collection('keyword', function(err, collection){
+    collection.find({'keyword':keyword}).limit(10).toArray( function(err, array){
+      console.log(array[0].keyword);
+      keyword = array[0].keyword;
+
+      callback(null, client, keyword);
+    });
+  });
+}
+
+function closeClient(client, keyword, callback){
+  client.close();
+  callback(null, "");
+}
+
+});
+
+
+
+
+app.get('/mongo/api2', function(req, res){
+  var mongo = require('mongodb');
+  var Server = mongo.Server;
+  var Db = mongo.Db;
+  var serverOptions = {
+    auto_reconnect: true
+    ,poolSize: 5 
+    //,socketOptions:{timeout : 0, keepAlive : 1}
   };
   
   var server = new Server(mongo_server, 27017, serverOptions);
@@ -149,14 +222,18 @@ app.get('/mongo/api', function(req, res){
 
   db.open(function(err, db) {
     // レコメンド物件取得処理 
-    async.waterfall( [getActionHistory, getBukkenIds, calcKeyword, getKeyBestTen, calcBukken, getBukkenJson],
+    //async.waterfall( [getActionHistory, getBukkenIds, calcKeyword, getKeyBestTen, calcBukken, getBukkenJson],
+    async.waterfall( [getActionHistory],
                      function(err, results) {
                        if (err) {
                          return console.log(new Date + " MONGO API RESULTS ERROR: " + err + " results = " + results);
                        }
                        db.close();
-                       res.send(results);
-                   });
+                       //res.send(results);
+                       //console.log("db.close()");
+                       res.send("results");
+                       //res.render('api', { json: results });
+    });
   });
 });
 
@@ -165,21 +242,23 @@ app.get('/mongo/api', function(req, res){
 /* レコメンド取得処理 */
 /* 行動履歴取得 */
 function getActionHistory(callback){
+  //console.log("getActionHistory");
   db.collection('actionhistory', function(err, collection) {
     if (err) {
       return console.log(new Date + " MONGO getActionHistory collection ERROR: " + err);
     }
-    collection.find({'user_id' : parseInt(user_id)}, function(err, docs) {
+    collection.find({'user_id' : parseInt(user_id)}).sort({"count":-1}).limit(10).toArray( function(err, docs) {
       if (err) {
         return console.log(new Date + " MONGO getActionHistory find ERROR: " + err);
       }
-      callback(null, docs);
+      callback(null, docs[0].bukken_id);
     });
   });
 }
 
 /* 行動履歴から物件情報リストを作成する */
 function getBukkenIds(docs, callback){
+  //console.log("getBukkenIds");
   var bukken_ids = new Array();
   docs.each( function(err, doc){
     if (err) {
@@ -194,32 +273,20 @@ function getBukkenIds(docs, callback){
 }
 
 /* 物件情報リストから物件に含まれるキーワードごとの合計を計算 */
-function calcKeyword(bukken_ids, callback){
-  var keyhash = {};
-  
+function calcKeyword(bukken_id, callback){
+  console.log("calcKeyword start");
   db.collection('keyword', function(err, collection) {
     if (err) {
       return console.log(new Date + " MONGO calcKeyword collection ERROR: " + err);
     }
-    collection.find({'$or' : bukken_ids}, function(err, keywords) {
+    collection.find({'bukken_id' : bukken_id}).limit(2).toArray( function(err, keywords) {
       if (err) {
         return console.log(new Date + " MONGO calcKeyword find ERROR: " + err);
       }
-        keywords.each( function(err, key){
-          if (err) {
-            return console.log(new Date + " MONGO calcKeyword ERROR: " + err);
-          }
-          if (key == null ) {
-            callback(null, keyhash); 
-          }else{
-            if ( typeof keyhash[key.keyword] === "undefined" ) {
-              keyhash[key.keyword] = 1;
-            } else {
-              keyhash[key.keyword] = keyhash[key.keyword] + 1;
-            }
-          }
-        });
-      });
+      //console.log(keywords);
+      console.log("calcKeyword end");
+      callback(null, keywords); 
+    });
   });
 }
 
@@ -238,57 +305,55 @@ function getKeyBestTen(keyhash, callback) {
 }
 
 /* キーワードを含む物件のIDを取得 */
-function calcBukken(keyword_list, callback){
-  var bukkenhash = {};
+function calcBukken(keywords, callback){
+  var done = 0;
+  var keyword1 = "";
+  var keyword2 = "";
+
   db.collection('keyword', function(err, collection) {
     if (err) {
       return console.log(new Date + " MONGO calcBukken collection ERROR: " + err);
     }
-    collection.find({'$or' : keyword_list}, function(err, keywords) {
+    collection.find({'keyword':keywords[0].keyword}).toArray( function(err, key) {
       if (err) {
         return console.log(new Date + " MONGO calcBukken find ERROR: " + err);
       }
-      keywords.each( function(err, key){
-      if (err) {
-        return console.log(new Date + " MONGO calcBukken ERROR: " + err);
-      }
-        if (key == null ) {
-          callback(null, bukkenhash);
-        }else{
-          if ( typeof bukkenhash[key.bukken_id] === "undefined" ) {
-            bukkenhash[key.bukken_id] = 1;
-          } else {
-            bukkenhash[key.bukken_id] = bukkenhash[key.bukken_id] + 1;
-          }
-        }
-      });
+      keyword1 = key;
+      console.log(keyword1);
     });
+    collection.find({'keyword':keywords[1].keyword}).toArray( function(err, key) {
+      if (err) {
+        return console.log(new Date + " MONGO calcBukken find ERROR: " + err);
+      }
+      keyword2 = key;
+      console.log(keyword2);
+    });
+    callback(null, keyword1, keyword2);
   });
 }
 
 /* 物件上位2件をjsonとして返す */
-function getBukkenJson (bukkenhash, callback) {
-  bukkenhash = sortObj(bukkenhash, false, true, true);
-  var bukken_ids = new Array();
-  var count = 0;
-  for (var bukken_id in bukkenhash) {
-    count++;
-    if (count > 2){break;}
-    bukken_ids.push({'bukken_id':parseInt(bukken_id)});
-  }
+function getBukkenJson (keyword1, keyword2, callback) {
+  var r1 = Math.floor( Math.random() * keyword1.length - 1 ); 
+  var r2 = Math.floor( Math.random() * keyword2.length - 1 ); 
   /* 物件が2以下だった場合は空のハッシュを返す */
-  if (count < 2 ) {callback(null,{});}
-
   db.collection('bukken', function(err, collection) {
     if (err) {
       return console.log(new Date + " MONGO getBukkenJson collection ERROR: " + err);
     }
-    collection.find({'$or' : bukken_ids}).toArray(function(err, bukkens) {
+    collection.find({'bukken_id':keyword1[r1].bukken_id}).toArray(function(err, bukken1) {
       if (err) {
         return console.log(new Date + " MONGO getBukkenJson find ERROR: " + err);
       }
-      callback(null, bukkens);
+      console.log(bukken1);
     }); 
+    collection.find({'bukken_id':keyword2[r2].bukken_id}).toArray(function(err, bukken2) {
+      if (err) {
+        return console.log(new Date + " MONGO getBukkenJson find ERROR: " + err);
+      }
+      console.log(bukken2);
+    }); 
+    callback(null, "");
   }); 
 }
 
