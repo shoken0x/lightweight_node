@@ -133,10 +133,10 @@ app.get('/oracle/bukken', function(req, res){
 
 
 app.get('/mongo/api', function(req, res){
-  async.waterfall( [a,b,c,closeClient],
+  async.waterfall( [a,b,c,d,e,closeClient],
                  function(err, results) {
                    if (err) { console.log(new Date + "ERROR: " + err); }
-                   res.send("results");
+                   res.send(results);
   });
 
 
@@ -157,24 +157,24 @@ function a(callback){
 function b(client, callback){
   var bukken_id = 0;
   client.open(function(err, p_client) {
-    if (err) { return console.log(new Date + " MONGO DB open ERROR: " + err); }
+    if (err) { return console.log(new Date + " MONGO client open ERROR: " + err); }
     client.collection('actionhistory', function(err, collection){
+      if (err) { return console.log(new Date + " MONGO collection  ERROR: " + err); }
       collection.find({'user_id':parseInt(req.param('user_id'))}).sort({'created_at':-1}).limit(10).toArray( function(err, array){
+        if (err) { return console.log(new Date + " MONGO b:find  ERROR: " + err); }
         //たぶんnodeでsortしたほうが早い
-        console.log(array[0].bukken_id);
-        bukken_id = array[0].bukken_id;
-
-        callback(null, client, bukken_id);
+        callback(null, client, array);
       });
     });
   });
 }
 
-function c(client, bukken_id, callback){
+function c(client, array, callback){
   var keyword = "";
   client.collection('keyword', function(err, collection){
-    collection.find({'bukken_id':bukken_id}).limit(10).toArray( function(err, array){
-      console.log(array[0].keyword);
+    if (err) { return console.log(new Date + " MONGO c:collection  ERROR: " + err); }
+    collection.find({'bukken_id':array[0].bukken_id}).limit(10).toArray( function(err, array){
+      if (err) { return console.log(new Date + " MONGO c:find  ERROR: " + err); }
       keyword = array[0].keyword;
 
       callback(null, client, keyword);
@@ -185,18 +185,29 @@ function c(client, bukken_id, callback){
 function d(client, keyword, callback){
   var rec_bukken_id = "";
   client.collection('keyword', function(err, collection){
+    if (err) { return console.log(new Date + " MONGO d:collection  ERROR: " + err); }
     collection.find({'keyword':keyword}).limit(10).toArray( function(err, array){
-      console.log(array[0].keyword);
-      keyword = array[0].keyword;
+      if (err) { return console.log(new Date + " MONGO d:find  ERROR: " + err); }
+      rec_bukken_id = array[0].bukken_id;
 
-      callback(null, client, keyword);
+      callback(null, client, rec_bukken_id);
+    });
+  });
+}
+function e(client, rec_bukken_id, callback){
+  client.collection('bukken', function(err, collection){
+    if (err) { return console.log(new Date + " MONGO e:collection  ERROR: " + err); }
+    collection.find({'bukken_id':rec_bukken_id}).limit(2).toArray( function(err, json){
+      if (err) { return console.log(new Date + " MONGO e:find  ERROR: " + err); }
+
+      callback(null, client, json);
     });
   });
 }
 
-function closeClient(client, keyword, callback){
+function closeClient(client, json, callback){
   client.close();
-  callback(null, "");
+  callback(null, json);
 }
 
 });
