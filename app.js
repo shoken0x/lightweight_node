@@ -160,7 +160,7 @@ function b(client, callback){
     if (err) { return console.log(new Date + " MONGO client open ERROR: " + err); }
     client.collection('actionhistory', function(err, collection){
       if (err) { return console.log(new Date + " MONGO collection  ERROR: " + err); }
-      collection.find({'user_id':parseInt(req.param('user_id'))}).sort({'created_at':-1}).limit(10).toArray( function(err, array){
+      collection.find({'user_id':parseInt(req.param('user_id'))}).sort({'count':-1}).limit(10).toArray( function(err, array){
         if (err) { return console.log(new Date + " MONGO b:find  ERROR: " + err); }
         //たぶんnodeでsortしたほうが早い
         callback(null, client, array);
