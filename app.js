@@ -188,7 +188,8 @@ function d(client, keyword, callback){
     if (err) { return console.log(new Date + " MONGO d:collection  ERROR: " + err); }
     collection.find({'keyword':keyword}).limit(10).toArray( function(err, array){
       if (err) { return console.log(new Date + " MONGO d:find  ERROR: " + err); }
-      rec_bukken_id = array[0].bukken_id;
+      //ランダムなbukken_idをレコメンド
+      rec_bukken_id = array[Math.floor(Math.random()*(array.length-1))].bukken_id;
 
       callback(null, client, rec_bukken_id);
     });
